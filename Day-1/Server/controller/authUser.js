@@ -3,16 +3,18 @@
  */
 
 //IMPORTS
-const { User, validate } = require("../models/user");
+const { User } = require("../models/user");
+const { validateRegister, validateLogin } = require("../middlewares/validator");
+const { genAuthToken } = require("../middlewares/genToken");
 const bcrypt = require("bcrypt");
-const joi = require("joi");
+
 
 
 //FUNCTION TO REGISTER/SAVE USERS TO THE DB
 const registerUser = async(req, res) => {
     try {
         //VALIDATE THE INPUT DATA
-        const { error } = validate(req.body);
+        const { error } = validateRegister(req.body);
         if (error)
             return res.status(400).send({ message: error.details[0].message });
 
@@ -56,8 +58,8 @@ const loginUser = async(req, res) => {
 
         if (!validPassword)
             return res.status(401).send({ message: "Email and password do not match!" });
-
-        const token = user.genAuthToken();
+        console.log("hello")
+        const token = genAuthToken();
         res.status(200).send({ data: token, message: "Logged in Successfully!" });
     } catch (error) {
         return res.status(500).send({ message: "Internal server error!" });
@@ -70,12 +72,3 @@ module.exports = {
     loginUser,
     registerUser,
 };
-
-//VALIDATION FUNCTION USING JOI TO VALIDATE LOGIN DETAILS
-const validateLogin = (data) => {
-    const schema = joi.object({
-        email: joi.string().email().required().label("Email"),
-        password: joi.string().required().label("Password"),
-    });
-    return schema.validate(data);
-}
